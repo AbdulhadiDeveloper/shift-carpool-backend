@@ -5,7 +5,7 @@ export interface IRide extends Document {
   driverName: string;
   origin: string;
   destination: string;
-  departureTime: string;
+  departureTime: Date;
   estimatedDuration: string;
   totalSeats: number;
   availableSeats: number;
@@ -18,7 +18,7 @@ const RideSchema: Schema = new Schema({
   driverName: { type: String, required: true },
   origin: { type: String, required: true, trim: true },
   destination: { type: String, required: true, trim: true },
-  departureTime: { type: String, required: true },
+  departureTime: { type: Date, required: true },
   estimatedDuration: { type: String, default: '45 mins' },
   totalSeats: { type: Number, required: true, min: 1, max: 4 },
   availableSeats: { type: Number, required: true, min: 0 },

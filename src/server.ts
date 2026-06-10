@@ -15,15 +15,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json()); // Parses incoming JSON requests
 
-// Routes
-app.use('/api/rides', rideRoutes);
-app.use('/api/auth', authRoutes);
-
-// Basic Health Check Route
-app.get('/', (req, res) => {
-  res.send('Shift Carpool API is running...');
-});
-
 // MongoDB Connection (Adapted for Vercel Serverless)
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) {
@@ -34,11 +25,28 @@ const connectDB = async () => {
     console.log('MongoDB Connected successfully');
   } catch (error) {
     console.error('Database connection error:', error);
+    throw error; // Rethrow to let the middleware handle it
   }
 };
 
-// Connect to DB immediately
-connectDB();
+// Global middleware to ensure DB connection before handling routes
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
+
+// Routes
+app.use('/api/rides', rideRoutes);
+app.use('/api/auth', authRoutes);
+
+// Basic Health Check Route
+app.get('/', (req, res) => {
+  res.send('Shift Carpool API is running...');
+});
 
 // Only listen locally if we are NOT on Vercel
 if (process.env.NODE_ENV !== 'production') {

@@ -37,8 +37,12 @@ router.post('/register', async (req, res) => {
             email: user.email,
             token: generateToken(user._id.toString())
         });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error during registration' });
+    } catch (error: any) {
+        console.error("Registration Error: ", error);
+        res.status(500).json({ 
+            error: 'Server error during registration', 
+            details: error.message || 'Unknown error' 
+        });
     }
 });
 
@@ -61,8 +65,12 @@ router.post('/login', async (req, res) => {
             email: user.email,
             token: generateToken(user._id.toString())
         });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error during login' });
+    } catch (error: any) {
+        console.error("Login Error: ", error);
+        res.status(500).json({ 
+            error: 'Server error during login', 
+            details: error.message || 'Unknown error' 
+        });
     }
 });
 
