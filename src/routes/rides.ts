@@ -102,4 +102,55 @@ router.patch('/:id/join', protect, async (req: AuthRequest, res) => {
   }
 });
 
+// PATCH: Leave a ride (Rider relinquishes seat)
+router.patch('/:id/leave', protect, async (req: AuthRequest, res) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+
+  if (!userId) return res.status(401).json({ error: 'User not authenticated' });
+
+  try {
+    const updatedRide = await Ride.findOneAndUpdate(
+      { _id: id, passengers: userId },
+      { 
+        $inc: { availableSeats: 1 },
+        $pull: { passengers: userId }
+      },
+      { new: true }
+    );
+
+    if (!updatedRide) {
+      return res.status(400).json({ error: 'Not a passenger or ride not found.' });
+    }
+
+    res.status(200).json(updatedRide);
+  } catch (error) {
+    res.status(500).json({ error: 'Transaction failed.' });
+  }
+});
+
+// PATCH: Cancel a route (Driver mode)
+router.patch('/:id/cancel', protect, async (req: AuthRequest, res) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+
+  if (!userId) return res.status(401).json({ error: 'User not authenticated' });
+
+  try {
+    const updatedRide = await Ride.findOneAndUpdate(
+      { _id: id, driverId: userId, status: 'active' },
+      { status: 'cancelled' },
+      { new: true }
+    );
+
+    if (!updatedRide) {
+      return res.status(400).json({ error: 'Not authorized or ride already completed/cancelled.' });
+    }
+
+    res.status(200).json(updatedRide);
+  } catch (error) {
+    res.status(500).json({ error: 'Transaction failed.' });
+  }
+});
+
 export default router;
