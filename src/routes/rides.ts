@@ -129,6 +129,38 @@ router.patch('/:id/leave', protect, async (req: AuthRequest, res) => {
   }
 });
 
+// PATCH: Update a route (Driver mode)
+router.patch('/:id', protect, async (req: AuthRequest, res) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+  const { destination, departureTime, totalSeats } = req.body;
+
+  if (!userId) return res.status(401).json({ error: 'User not authenticated' });
+
+  try {
+    const ride = await Ride.findOne({ _id: id, driverId: userId, status: 'active' });
+    if (!ride) return res.status(404).json({ error: 'Not authorized or ride not found.' });
+
+    // Handle seat logic carefully
+    if (totalSeats !== undefined) {
+      const reservedSeats = ride.totalSeats - ride.availableSeats;
+      if (totalSeats < reservedSeats) {
+        return res.status(400).json({ error: `Cannot reduce seats below ${reservedSeats} currently booked.` });
+      }
+      ride.totalSeats = totalSeats;
+      ride.availableSeats = totalSeats - reservedSeats;
+    }
+
+    if (destination) ride.destination = destination;
+    if (departureTime) ride.departureTime = departureTime;
+
+    const updatedRide = await ride.save();
+    res.status(200).json(updatedRide);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update ride.' });
+  }
+});
+
 // PATCH: Cancel a route (Driver mode)
 router.patch('/:id/cancel', protect, async (req: AuthRequest, res) => {
   const { id } = req.params;

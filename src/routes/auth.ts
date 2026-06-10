@@ -35,6 +35,7 @@ router.post('/register', async (req, res) => {
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
+            phone: user.phone,
             token: generateToken(user._id.toString())
         });
     } catch (error: any) {
@@ -63,6 +64,7 @@ router.post('/login', async (req, res) => {
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
+            phone: user.phone,
             token: generateToken(user._id.toString())
         });
     } catch (error: any) {
