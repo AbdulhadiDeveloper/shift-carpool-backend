@@ -1,5 +1,6 @@
 import express from 'express';
 import Ride from '../models/Ride';
+import User from '../models/User';
 import { protect, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
@@ -15,6 +16,27 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
+// GET: Retrieve user's specific journeys (driving or riding)
+router.get('/my', protect, async (req: AuthRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+
+  try {
+    const rides = await Ride.find({
+      $or: [
+        { driverId: userId },
+        { passengers: userId }
+      ]
+    }).sort({ departureTime: 1 }); // Sort by upcoming
+    
+    res.status(200).json(rides);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user journeys.' });
+  }
+});
+
 // POST: Broadcast a new route (Driver Mode)
 router.post('/', protect, async (req: AuthRequest, res) => {
   try {
@@ -25,10 +47,17 @@ router.post('/', protect, async (req: AuthRequest, res) => {
     if (!driverId) {
        return res.status(401).json({ error: 'User not authenticated' });
     }
+
+    // Fetch user to get their registered phone number for WhatsApp integration
+    const user = await User.findById(driverId);
+    if (!user) {
+       return res.status(404).json({ error: 'Driver profile not found' });
+    }
     
     const newRide = new Ride({
       driverId,
       driverName,
+      driverPhone: user.phone,
       origin,
       destination,
       departureTime,
