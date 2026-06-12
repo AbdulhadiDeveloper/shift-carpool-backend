@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Ride from '../models/Ride';
 import User from '../models/User';
 import { protect, AuthRequest } from '../middleware/auth';
@@ -24,10 +25,11 @@ router.get('/my', protect, async (req: AuthRequest, res) => {
   }
 
   try {
+    const userObjectId = new mongoose.Types.ObjectId(userId);
     const rides = await Ride.find({
       $or: [
-        { driverId: userId },
-        { passengers: userId }
+        { driverId: userObjectId },
+        { passengers: userObjectId }
       ]
     }).sort({ departureTime: 1 }); // Sort by upcoming
     

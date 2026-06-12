@@ -14,6 +14,10 @@ const generateToken = (id: string) => {
 router.post('/register', async (req, res) => {
     const { fullName, email, password, phone } = req.body;
 
+    if (!fullName || !email || !password || !phone) {
+        return res.status(400).json({ error: 'Please provide all required fields.' });
+    }
+
     try {
         // Check if user exists
         const userExists = await User.findOne({ email });
@@ -50,6 +54,10 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Please provide email and password.' });
+    }
 
     try {
         // Check for user
