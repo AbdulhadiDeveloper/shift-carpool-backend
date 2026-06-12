@@ -91,7 +91,7 @@ router.patch('/:id/join', protect, async (req: AuthRequest, res) => {
         $inc: { availableSeats: -1 }, // Decreases available seats by 1
         $push: { passengers: userId } // Adds user to passenger list
       },
-      { new: true } // Returns the updated document
+      { returnDocument: 'after' } // Returns the updated document
     );
 
     if (!updatedRide) {
@@ -118,7 +118,7 @@ router.patch('/:id/leave', protect, async (req: AuthRequest, res) => {
         $inc: { availableSeats: 1 },
         $pull: { passengers: userId }
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!updatedRide) {
@@ -174,7 +174,7 @@ router.patch('/:id/cancel', protect, async (req: AuthRequest, res) => {
     const updatedRide = await Ride.findOneAndUpdate(
       { _id: id, driverId: userId, status: 'active' },
       { status: 'cancelled' },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!updatedRide) {
